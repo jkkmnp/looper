@@ -12,11 +12,17 @@ The loop can change mode between steps, allowing you to write very concise, even
 - Extensible – add custom steps, e.g. logging, file I/O, or arbitrary calculations.
 - TypeScript first – the whole codebase is typed, making it straightforward to reason about data flow.
 
+## Mini roadmap
+- v0.2 - Support for tool calls
+- v0.3 - Defined standard modes
+...
+- v1.0 - Convert looper to a class
+
 ## Quick start
 
 The example creates a looper that takes user input and calls an LLM:
 
-```
+```typescript
 // ... imports from looper's src/
 import OpenAI from 'openai';
 import { createInterface } from 'readline/promises';
@@ -40,19 +46,18 @@ Save the file as `myloop.ts` and run the script to start the interactive loop.
 
 Logging a welcome message and setting a system prompt:
 
-```
+```typescript
 // ...continued from "Quick start"
 
 const looper = createLooper();
 
 // Add welcome message
-looper.add(createLogStep("WELCOME TO LOOPY\n================", ["init"]));
+looper.add(createLogStep("=== WELCOME TO LOOPER ===", ["init"]));
 // Add system prompt
 looper.add(createSystemStep('Only reply with terse, short answers.'));
 
 looper.add(prompt);
 looper.add(llm);
-
 await looper.next();
 ```
 
@@ -65,7 +70,7 @@ The best way to create a new Step is to use the factory building function. The f
 
 Example of creating a step that logs the length of the last message from the LLM assistant:
 
-```
+```typescript
 import type { Step } from '../types';
 import stepFactory from './_stepFactory';
 
@@ -85,7 +90,7 @@ export default reponseLengthLogger;
 
 In your looper setup, you would add this step after the LLM step:
 
-```
+```typescript
 looper.add(llm);
 looper.add(reponseLengthLogger);
 ```
@@ -96,7 +101,7 @@ Loopy is slightly opinionated and intended towards user promopt + llm call use c
 
 Here's FizzBuzz implemented with the looper:
 
-```
+```typescript
 const looper = createLooper();
 
 looper.add(async l => {
@@ -129,7 +134,7 @@ await looper.next();
 
 Here's a basic task list for the LLM to process:
 
-```
+```typescript
 const looper = createLooper();
 
 const tasks = [
@@ -152,7 +157,6 @@ const taskPrompter = stepFactory({
 
 looper.add(taskPrompter);
 looper.add(llm); // see "Quick start" for llm step definition example
-
 await looper.next();
 ```
 
