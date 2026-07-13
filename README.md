@@ -94,9 +94,92 @@ looper.add(llm);
 looper.add(reponseLengthLogger);
 ```
 
+## Tools
+
+Tools allow the LLM to call external functions and use their results. Each tool has a definition (sent to the LLM) and an execute function (run when the tool is called).
+
+### Creating a tool
+
+Use the `toolFactory` to create a tool with an OpenAI-compatible definition:
+
+```typescript
+import toolFactory from './tools/_toolFactory';
+
+const myTool = toolFactory({
+  name: "my_tool_name",
+  description: "What this tool does",
+  parameters: {
+    type: "object",
+    properties: {
+      arg1: {
+        type: "string",
+        description: "Description of argument"
+      }
+    },
+    required: ["arg1"],
+    additionalProperties: false
+  },
+  execute: async ({ arg1 }) => {
+    // Your tool logic here
+    return { result: "data" };
+  }
+});
+```
+
+The `parameters` field follows JSON Schema format. The `execute` function receives the parsed arguments and should return a value (which will be JSON-stringified).
+
+### Adding tools to the loop
+
+Tools are added using the `createToolsStep` function. Pass an array of tools:
+
+```typescript
+import { createToolsStep } from './steps/tools';
+
+looper.add(createToolsStep([myTool]));
+```
+
+The tools step handles two modes:
+- **init**: Registers tool definitions with the LLM context
+- **tools_running**: Executes all pending tool calls in parallel and adds results to the conversation
+
+### Basic example
+
+Here's a simple tool that multiplies two numbers:
+
+```typescript
+import toolFactory from './tools/_toolFactory';
+import { createToolsStep } from './steps/tools';
+
+const multiply = toolFactory({
+  name: "multiply",
+  description: "Multiply two numbers together",
+  parameters: {
+    type: "object",
+    properties: {
+      a: { type: "number", description: "First number" },
+      b: { type: "number", description: "Second number" }
+    },
+    required: ["a", "b"],
+    additionalProperties: false
+  },
+  execute: async ({ a, b }) => {
+    return a * b;
+  }
+});
+
+const looper = createLooper();
+looper.add(createSystemStep("You can use the multiply tool to multiply numbers."));
+looper.add(createToolsStep([multiply]));
+looper.add(llm); // your LLM step
+looper.add(prompt); // your prompt step
+await looper.next();
+```
+
+When the LLM calls the `multiply` tool, the result is automatically added to the conversation and the LLM can continue with the result.
+
 ## Get creative with use cases
 
-Loopy is slightly opinionated and intended towards user promopt + llm call use cases. But, with custom steps and freedom to switch things up, the looper bends to completely different uses.
+Looper is slightly opinionated and intended towards user promopt + llm call use cases. But, with custom steps and freedom to switch things up, the looper bends to completely different uses.
 
 Here's FizzBuzz implemented with the looper:
 
@@ -168,7 +251,10 @@ src/
 │   ├─ log.ts            – simple console log step
 │   ├─ system.ts         – inject system prompt
 │   ├─ prompt.ts         – interactive prompt
-│   └─ llm.ts            – LLM reply step
+│   ├─ llm.ts            – LLM reply step
+│   └─ tools.ts          – tool execution step
+├─ tools/
+│   └─ _toolFactory.ts   – factory to create tools
 ├─ looper.ts             – core loop logic
 └─ types.ts              – shared types
 ```
