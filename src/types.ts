@@ -16,7 +16,7 @@ export type ToolDefinition = {
 export type Message = {
   type?: string,
   role: string,
-  content: string,
+  content?: string,
   name?: string,
   tool_calls?: Array<any>,
   tool_call_id?: any

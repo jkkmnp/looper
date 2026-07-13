@@ -15,7 +15,6 @@ The loop can change mode between steps, allowing you to write very concise, even
 ## Mini roadmap
 - v0.2 - Support for tool calls
 - v0.3 - Defined standard modes
-...
 - v1.0 - Convert looper to a class
 
 ## Quick start

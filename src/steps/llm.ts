@@ -22,17 +22,16 @@ const createLLMStep = (llm: ChatCompletionCompatible, model: string)  => {
         });
         
         const content = response.choices[0]?.message?.content;
-        const tools_calls = response.choices[0]?.message?.tool_calls;
-        
-        if (content) {
-            l.addMessage({role: "assistant", content: content});
+        const tool_calls = response.choices[0]?.message?.tool_calls;
+
+        if (tool_calls?.length) {
+            l.addMessage({role: "assistant", tool_calls});
+            console.log('Tools called:', tool_calls.length);
+            l.mode = "tools_running";
+        } else if (content) {
+            l.addMessage({role: "assistant", content});
             console.log(content);
             l.mode = "response_ready";
-        }
-        
-        if (tools_calls?.length) {
-            console.log('Tools called:', tools_calls.length);
-            l.mode = "tools_running";
         }
     }
 
